@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../../../Modal';
-import { Switch, List, Avatar, Button, Icon } from 'antd';
+import { Switch, List, Avatar, Button, notification } from 'antd';
 import noAvatar from '../../../../assets/img/png/no-avatar.png';
 import {EditOutlined, StopOutlined, DeleteOutlined, CheckSquareOutlined} from '@ant-design/icons';
 import EditUserForm from '../EditUserForm';
-import {getAvatarApi} from '../../../../api/user';
+import {getAvatarApi, activateUser} from '../../../../api/user';
+import { getAcessToken } from '../../../../api/auth';
 
 import "./ListUsers.scss";
 
 export default function (props) {
     // desctructuring for users
-    const { usersActive, usersInactive } = props;
+    const { usersActive, usersInactive, setReloadUsers } = props;
 
     // state for switch
     const [viewUsersActive, setViewUsersActive] = useState(true);
@@ -31,8 +32,8 @@ export default function (props) {
                     {viewUsersActive ? "Active users" : "Inactive Users"}
                 </span>
             </div>
-            {viewUsersActive ? <UsersActive usersActive={usersActive} setIsVisibleModal={setIsVisibleModal} setModalTitle={setModalTitle} setModalContent={setModalContent} /> 
-            : <UsersInactive usersInactive={usersInactive}/> }
+            {viewUsersActive ? <UsersActive usersActive={usersActive} setIsVisibleModal={setIsVisibleModal} setModalTitle={setModalTitle} setModalContent={setModalContent} setReloadUsers={setReloadUsers} /> 
+            : <UsersInactive usersInactive={usersInactive} setReloadUsers={setReloadUsers} /> }
 
             {/* MODAL */}
             <Modal
@@ -48,12 +49,12 @@ export default function (props) {
 
 function UsersActive(props){
 
-    const {usersActive, setIsVisibleModal, setModalContent, setModalTitle} = props;
+    const {usersActive, setIsVisibleModal, setModalContent, setModalTitle, setReloadUsers} = props;
 
     const editUsers = user => {
         setIsVisibleModal(true);
-        setModalTitle(`Editar ${user.name ? user.name : '...'} ${user.lastName ? user.lastName : '...'}`);
-        setModalContent(<EditUserForm user={user}/>);
+        setModalTitle(`Edit ${user.name ? user.name : '...'} ${user.lastName ? user.lastName : '...'}`);
+        setModalContent(<EditUserForm user={user} setIsVisibleModal={setIsVisibleModal} setReloadUsers={setReloadUsers} />);
     }
 
     return(
@@ -62,14 +63,14 @@ function UsersActive(props){
             itemLayout='horizontal'
             dataSource={usersActive}
             renderItem={ user => 
-                <UserActive user={user} editUsers={editUsers} />
+                <UserActive user={user} editUsers={editUsers} setReloadUsers={setReloadUsers}/>
             }
         />
     )
 }
 
 function UserActive(props){
-    const { user, editUsers } = props;
+    const { user, editUsers, setReloadUsers} = props;
     const [ avatar, setAvatar ] = useState(null);
 
     useEffect(() => {
@@ -82,6 +83,25 @@ function UserActive(props){
         }
     }, [user]);
 
+    const desactivateUser = () => {
+        const token = getAcessToken();
+
+        activateUser(token, user._id, false)
+            .then(response => {
+                notification['success']({
+                    message: response
+                });
+
+                setReloadUsers(true);
+            })
+            .catch(err => {
+                notification['error']({
+                    message: err
+                });
+            });
+
+    }
+
     return (
         <List.Item
             actions={[
@@ -93,7 +113,7 @@ function UserActive(props){
                 </Button>,
                 <Button
                     type='danger'
-                    onClick={() => console.log('Desactivate user')}
+                    onClick={ desactivateUser }
                 >
                     <StopOutlined />
                 </Button>,
@@ -119,7 +139,7 @@ function UserActive(props){
 
 function UsersInactive(props){
 
-    const {usersInactive} = props;
+    const {usersInactive, setReloadUsers} = props;
 
     return(
         <List
@@ -127,14 +147,14 @@ function UsersInactive(props){
             itemLayout='horizontal'
             dataSource={usersInactive}
             renderItem={ user => 
-                <UserInactive user={user} />
+                <UserInactive user={user} setReloadUsers={setReloadUsers} />
             }
         />
     )
 }
 
 function UserInactive(props){
-    const { user } = props;
+    const { user, setReloadUsers } = props;
     const [ avatar, setAvatar ] = useState(null);
 
     useEffect(() => {
@@ -147,12 +167,31 @@ function UserInactive(props){
         }
     }, [user]);
 
+    const activate_User = () => {
+        const token = getAcessToken();
+
+        activateUser(token, user._id, true)
+            .then(response => {
+                notification['success']({
+                    message: response
+                });
+
+                setReloadUsers(true);
+            })
+            .catch(err => {
+                notification['error']({
+                    message: err
+                });
+            });
+
+    }
+
     return (
         <List.Item
             actions={[
                 <Button
                     type='primary'
-                    onClick={() => console.log('Activate user')}
+                    onClick={activate_User}
                 >
                     <CheckSquareOutlined />
                 </Button>,

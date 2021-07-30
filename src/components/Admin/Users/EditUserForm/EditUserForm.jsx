@@ -1,6 +1,6 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {useDropzone} from 'react-dropzone';
-import {Avatar, Form, Icon, Input, Select, Button, Row, Col, notification} from 'antd';
+import {Avatar, Form, Input, Select, Button, Row, Col, notification} from 'antd';
 import NoAvatar from '../../../../assets/img/png/no-avatar.png';
 import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
 import { getAvatarApi, uploadAvatarApi, updateUser } from '../../../../api/user';
@@ -9,7 +9,7 @@ import { getAcessToken } from '../../../../api/auth';
 import "./EditUserForm.scss";
 
 export default function EditUserForm(props){
-    const {user} = props;
+    const {user, setIsVisibleModal, setReloadUsers} = props;
     const [avatar, setAvatar] = useState(null);
     const [userData, setUserData] = useState({ });
 
@@ -48,10 +48,12 @@ export default function EditUserForm(props){
             if(userUpdate.password !== userUpdate.repeatPassword){
                 notification['error']({
                     message: 'Passwords must match'
-                })
+                });
                 return;
+            } else {
+                delete userUpdate.repeatPassword;
             }
-        }
+        };
 
         if(!userUpdate.name || !userUpdate.lastName || !userUpdate.email){
             notification['error']({
@@ -66,17 +68,21 @@ export default function EditUserForm(props){
                 updateUser(token, userUpdate, user._id).then(result => {
                     notification['success']({
                         message: result.message
-                    })
-                })
-            })
+                    });
+                    setIsVisibleModal(false);
+                    setReloadUsers(true);
+                });
+            });
         } else {
             updateUser(token, userUpdate, user._id).then(result => {
                 notification['success']({
                     message: result.message
-                })
-            })
-        }
-    }
+                });
+                setIsVisibleModal(false);
+                setReloadUsers(true);
+            });
+        };
+    };
 
     return(
         <div className="edit-user-form">
