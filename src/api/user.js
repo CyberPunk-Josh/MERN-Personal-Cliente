@@ -195,3 +195,52 @@ export function activateUser(token, userId, status) {
             return err.message;
         })
 }
+
+// delete user
+export function deleteUser(token, userId) {
+    const url = `${basePath}/${apiVersion}/delete-user/${userId}`;
+
+    const params = {
+        method: 'DELETE',
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+        }
+    };
+
+    return fetch(url, params)
+        .then(response => {
+            return response.json();
+        })
+        .then(result => {
+            return result.message;
+        })
+        .catch(err => {
+            return err.message;
+        })
+}
+
+// sign up user from admin
+export function signUpUserAdmin(token, data) {
+    const url = `${basePath}/${apiVersion}/sign-up-admin`;
+
+    const params = {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: token
+        },
+        body: JSON.stringify(data),
+    };
+
+    return fetch(url, params)
+        .then(response => {
+            return response.json();
+        })
+        .then(result => {
+            return result.json();
+        })
+        .catch(err => {
+            return err.message;
+        })
+}

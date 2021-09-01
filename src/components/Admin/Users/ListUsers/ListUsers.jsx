@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../../../Modal';
-import { Switch, List, Avatar, Button, notification } from 'antd';
+import { Switch, List, Avatar, Button, notification, Modal as ModalAntd } from 'antd';
 import noAvatar from '../../../../assets/img/png/no-avatar.png';
 import {EditOutlined, StopOutlined, DeleteOutlined, CheckSquareOutlined} from '@ant-design/icons';
 import EditUserForm from '../EditUserForm';
-import {getAvatarApi, activateUser} from '../../../../api/user';
+import AddUserForm from '../AddUserForm';
+import {getAvatarApi, activateUser, deleteUser} from '../../../../api/user';
 import { getAcessToken } from '../../../../api/auth';
 
 import "./ListUsers.scss";
+
+const { confirm } = ModalAntd;
 
 export default function (props) {
     // desctructuring for users
@@ -21,17 +24,36 @@ export default function (props) {
     const [modalTitle, setModalTitle] = useState('');
     const [modalContent, setModalContent] = useState(null);
 
+    const addUserModal = () => {
+        setIsVisibleModal(true);
+        setModalTitle("Creating New User");
+        setModalContent(
+            <AddUserForm
+                setIsVisibleModal={setIsVisibleModal}
+                setReloadUsers={setReloadUsers}
+            />
+        );
+    }
+
     return (
         <div className="list-users">
-            <div className="list-users__switch">
-                <Switch
-                    defaultChecked
-                    onChange={ () => setViewUsersActive(!viewUsersActive) }
-                />
-                <span>
-                    {viewUsersActive ? "Active users" : "Inactive Users"}
-                </span>
+            <div className="list-users__header">
+
+                <div className="list-users__header-switch">
+                    <Switch
+                        defaultChecked
+                        onChange={ () => setViewUsersActive(!viewUsersActive) }
+                    />
+                    <span>
+                        {viewUsersActive ? "Active users" : "Inactive Users"}
+                    </span>
+                </div>
+
+                <Button type="primary" onClick={addUserModal}>
+                    New User
+                </Button>
             </div>
+            
             {viewUsersActive ? <UsersActive usersActive={usersActive} setIsVisibleModal={setIsVisibleModal} setModalTitle={setModalTitle} setModalContent={setModalContent} setReloadUsers={setReloadUsers} /> 
             : <UsersInactive usersInactive={usersInactive} setReloadUsers={setReloadUsers} /> }
 
@@ -83,6 +105,7 @@ function UserActive(props){
         }
     }, [user]);
 
+    // function to desactivate a user
     const desactivateUser = () => {
         const token = getAcessToken();
 
@@ -99,7 +122,33 @@ function UserActive(props){
                     message: err
                 });
             });
+    };
 
+    // function to delete a user
+    const showDeleteConfirm = () => {
+        const token = getAcessToken();
+
+        confirm({
+            title: 'Delete a user',
+            content:`Are you sure you want to delete ${user.email}?`, 
+            okText: 'Delete',
+            okType: 'danger',
+            cancelText: 'Cancel',
+            onOk() {
+                deleteUser(token, user._id)
+                    .then(response => {
+                        notification['success']({
+                            message: response
+                        })
+                        setReloadUsers(true);
+                    })
+                    .catch(error => {
+                        notification['error']({
+                            message: error
+                        })
+                    })
+            }
+        })
     }
 
     return (
@@ -119,7 +168,7 @@ function UserActive(props){
                 </Button>,
                 <Button
                     type='danger'
-                    onClick={() => console.log('Delete user')}
+                    onClick={ showDeleteConfirm }
                 >
                     <DeleteOutlined />
                 </Button>,
@@ -167,6 +216,7 @@ function UserInactive(props){
         }
     }, [user]);
 
+    // function to activate a user
     const activate_User = () => {
         const token = getAcessToken();
 
@@ -183,7 +233,33 @@ function UserInactive(props){
                     message: err
                 });
             });
+    };
 
+    // function to delete a user
+    const showDeleteConfirm = () => {
+        const token = getAcessToken();
+
+        confirm({
+            title: 'Delete a user',
+            content:`Are you sure you want to delete ${user.email}?`, 
+            okText: 'Delete',
+            okType: 'danger',
+            cancelText: 'Cancel',
+            onOk() {
+                deleteUser(token, user._id)
+                    .then(response => {
+                        notification['success']({
+                            message: response
+                        })
+                        setReloadUsers(true);
+                    })
+                    .catch(error => {
+                        notification['error']({
+                            message: error
+                        })
+                    })
+            }
+        })
     }
 
     return (
@@ -197,7 +273,7 @@ function UserInactive(props){
                 </Button>,
                 <Button
                     type='danger'
-                    onClick={() => console.log('Delete user')}
+                    onClick={ showDeleteConfirm }
                 >
                     <DeleteOutlined />
                 </Button>,
