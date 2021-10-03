@@ -1,11 +1,11 @@
 import React from 'react';
 import {Route, Switch} from 'react-router-dom';
-import { Layout, Row, Col } from 'antd';
+import { Row, Col } from 'antd';
 import MenuTop from '../components/Web/MenuTop';
+import FooterR from '../components/Web/Footer/Footer';
 
 const LayoutBasic = (props) => {
     const {routes} = props;
-    const {Footer} = Layout;
     // console.log(props)
 
     return (
@@ -19,9 +19,7 @@ const LayoutBasic = (props) => {
                 <Col lg={4} />
             </Row>
             <LoadRoutes  routes={routes} />
-            <Footer>
-                Joshue Neyra
-            </Footer>
+            <FooterR/>
         </>
     )
 };
